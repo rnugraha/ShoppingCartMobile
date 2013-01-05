@@ -1,0 +1,37 @@
+[
+	{
+		"category_id": 1,
+		"value": "CLASSIC",
+		"title": "Classic"
+	},
+	{
+		"category_id": 2,
+		"value": "POP",
+		"title": "Pop"
+	},
+	{
+		"category_id": 3,
+		"value": "HIPHOP",
+		"title": "Hip-hop"
+	},
+	{
+		"category_id": 4,
+		"value": "RNB",
+		"title": "R&B"
+	},
+	{
+		"category_id": 5,
+		"value": "DANCE",
+		"title": "Dance"
+	},
+	{
+		"category_id": 6,
+		"value": "JAZZ",
+		"title": "Jazz"
+	},
+	{
+		"category_id": 7,
+		"value": "REGGAE",
+		"title": "Reggae"
+	}
+]
