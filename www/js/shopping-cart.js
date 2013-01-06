@@ -7,7 +7,10 @@
 // Time: 8:20 PM
 //
 
-
-$(document).ready(function() {
-
+var AppView = Backbone.View.extend({
+	initialize: function () {
+		console.log('im here');
+	}
 });
+
+
