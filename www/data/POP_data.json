@@ -4,6 +4,7 @@
 		"category": "POP",
 		"artist": "Rihana",
 		"album": "Rihana",
+		"img": "cd4.jpg",
 		"price": 15.00
 	},
 	{
@@ -11,6 +12,7 @@
 		"category": "POP",
 		"artist": "Chris Brown",
 		"album": "F.A.M.E",
+		"img": "cd5.jpg",
 		"price": 13.00
 	}
 ]

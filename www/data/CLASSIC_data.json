@@ -4,6 +4,7 @@
 		"category": "CLASSIC",
 		"artist": "Bach",
 		"album": "Musical Offering",
+		"img": "cd1.jpg",
 		"price": 15.00
 	},
 	{
@@ -11,12 +12,14 @@
 		"category": "CLASSIC",
 		"artist": "Beethoven",
 		"album": "4 Sonatas for Piano",
+		"img": "cd2.jpg",
 		"price": 13.00
 	},	{
 		"product_id": 3,
 		"category": "CLASSIC",
 		"artist": "Wagner",
 		"album": "Tristan und Isolde Act II",
+		"img": "cd3.jpg",
 		"price": 13.00
 	}
 ]

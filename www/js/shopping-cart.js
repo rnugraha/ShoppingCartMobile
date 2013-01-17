@@ -8,95 +8,591 @@
 //
 
 
+
+
 // Product Category
 // ----------------
-$(function(){
+
+// Category model
+var Category = Backbone.Model.extend({});
+
+// Category collection
+var CategoryCollection = Backbone.Collection.extend({
+	// use Category model
+	model: Category,
+	// comparator to determine the sort order based on the **category_id**
+	comparator: function (category)
+	{
+		return category.get("category_id");
+	}
+});
 
 
-	// Category model
-	var Category = Backbone.Model.extend({});
+// Single Category View
+var CategoryView = Backbone.View.extend({
+//	detailView: null,
+	tagName: 'li',
 
-	// Category collection
-	var CategoryCollection = Backbone.Collection.extend({
-		// use Category model
-		model: Category,
-		// comparator to determine the sort order based on the **category_id**
-		comparator: function (category)
-		{
-			return category.get("category_id");
+	// HTML template for each category
+	template: $('#prod-cat-tmpl').template(),
+
+	appRouter: null,
+
+	// initialization
+	initialize: function () {
+
+		this.appRouter = this.options.appRouter;
+
+		// bind customized method
+		_.bindAll(this, "setDetailsViewModel");
+
+		// attach view as data to its element
+		// so that later we can retrieve all
+		// associated attributes of this view when we
+		// want to do further processing to this view
+		$(this.el).data("item-view", this.model);
+
+//		// init details view
+//		this.detailsView = new DetailsView;
+	},
+	events: {
+		"click a": "setDetailsViewModel"
+	},
+	setDetailsViewModel: function () {
+		//this.detailsView.render(this.model);
+		console.log('set model..');
+		this.appRouter.detailsModel = this.model;
+	},
+	// render Category view
+	render: function() {
+		// render template with associated model
+		$.tmpl(this.template, this.model).appendTo(this.el);
+		return this;
+	}
+});
+
+// Category View List
+var CategoryListView = Backbone.View.extend({
+	// bind categories to <code>#categories</code>
+	// element in the HTML
+	el: '#categories',
+	// HTML template for each category
+	template: $('#prod-cat-tmpl').template(),
+
+	appRouter: null,
+
+	initialize: function() {
+
+		this.appRouter = this.options.appRouter;
+
+		// bind customized method to this view
+		_.bindAll(this, "renderItem");
+	},
+
+	// render a single product item based on
+	// associated model and append it to the
+	// main element
+	renderItem: function(model){
+		var catView = new CategoryView({model: model, appRouter: this.appRouter});
+		catView.render();
+		$(this.el).append(catView.el);
+	},
+
+	// render Category view
+	render: function(){
+
+		// render each associated category model based on the template
+		// and then append it to the main element
+		this.collection.each(this.renderItem);
+
+		// refresh list view to re-apply jQuery Mobile styling
+		$(this.el).listview("refresh");
+
+		return this;
+	}
+});
+
+
+// Product Item
+// ------------
+
+// Product Item model
+var Item = Backbone.Model.extend({});
+
+// Product Item collection
+var ItemCollection = Backbone.Collection.extend({
+	// use Item model
+	model: Item,
+
+	// comparator to determine the sort order based on the **product_id**
+	comparator: function (product)
+	{
+		return product.get("product_id");
+	}
+});
+
+// A single product item view
+// use default element (**div**)
+var ItemView = Backbone.View.extend({
+
+	tagName: 'li',
+
+	// HTML template for each product item
+	template: $('#prod-item-tmpl').template(),
+
+	appRouter: null,
+
+	// initialization
+	initialize: function () {
+		this.appRouter = this.options.appRouter;
+		_.bindAll(this, "showItemPopup");
+	},
+
+	events: {
+		"click #buyItemBtn": "showItemPopup"
+	},
+
+	showItemPopup: function() {
+		console.log("show popup ...")
+		var buyPopup = new ItemPopUpView({model: this.model, appRouter: this.appRouter});
+		buyPopup.render();
+
+	},
+
+	// render Item view
+	render: function() {
+		// render template with associated model
+		var html = $.tmpl(this.template, this.model);
+
+		//then append it to view element
+		$(this.el).append(html);
+		return this;
+	}
+});
+
+// Product item collection
+var ItemViewList = Backbone.View.extend({
+	// main element to be bind to
+	el: '#productList',
+
+	appRouter: null,
+
+	// initialization
+	initialize: function(){
+		this.appRouter = this.options.appRouter;
+
+		// bind customized method to this view
+		_.bindAll(this, "renderItem", "isContainerEmpty");
+	},
+
+	// check if container is empty
+	isContainerEmpty: function() {
+		return $(this.el).children().length > 0 ? false : true;
+	},
+
+	// render a single product item based on
+	// associated model and append it to the
+	// main element
+	renderItem: function(model){
+
+
+			// initiate item view with its model
+			var itemView = new ItemView({model: model, appRouter: this.appRouter});
+			// render it
+			itemView.render();
+			// and append it to the main element
+			$(this.el).append(itemView.el);
+	},
+
+	// render the collection of product items
+	render: function() {
+
+		// first check if container is empty or not
+		if (!this.isContainerEmpty()) {
+			//if yes then empty it
+			$(this.el).empty();
 		}
-	});
 
-	// Category view
-	var CategoryView = Backbone.View.extend({
-		// bind categories to <code>#categories</code>
-		// element in the HTML
-		el: $('#categories'),
-		// HTML template for each category
-		template: $('#prod-cat-tmpl').template(),
+		// just populate the items from selected category
+		this.collection.each(this.renderItem);
+		// refresh list view to re-apply jQuery Mobile styling
+		$(this.el).listview("refresh");
 
-		initialize: function() {
-			_.bindAll(this)
-		},
-
-		// render Category view
-		render: function(){
-
-			// render each associated category model based on the template
-			// and then append it to the main element
-			$.tmpl(this.template, this.model.toArray()).appendTo(this.el);
-			// refresh list view to re-apply jQuery Mobile styling
-			$(this.el).listview("refresh");
-
-			return this;
-		}
-	});
+	}
+});
 
 
-	// Main App View
-	// -------------
+// Item pop up view
+// confirmation pop up if user wants to buy selected item or not
+var ItemPopUpView = Backbone.View.extend({
 
-	var AppView = Backbone.View.extend({
+	//element definition
+	el: '#purchase',
 
-		// product categories
-		cat_data: null,
-		cat_items: null,
-		cat_view: null,
+	template:  $('#prod-item-popup-tmpl').template(),
 
-		initialize: function () {
-			// define this as local variable
-			// so it's accessible in the lower
-			// functions
-			var appView = this;
+	appRouter: null,
 
-			// retrieve product category list
-			// from JSON file
-			$.ajax({
-				url: "data/ProductCategories_data.json",
-				dataType: 'json',
-				data: {},
-				async: false,
+	initialize: function () {
+		this.appRouter = this.options.appRouter;
+		_.bindAll(this, "buyItem")
+	},
 
-				// when product category list is successfully retrieved
-				success: function (data)
-				{
-					// build category list
-					appView.cat_data = data;
-					appView.cat_items = new CategoryCollection(data);
+	events: {
+		"click .buy-item-btn": "buyItem"
+	},
 
-					console.log(appView.cat_items.toJSON());
+	buyItem: function() {
 
-					appView.cat_view = new CategoryView({ model: appView.cat_items });
-					appView.cat_view.render();
+		// then insert its clone to the order collection
+		this.appRouter.basketItems.add(this.model.clone());
 
-				}
-			});
+		console.log('add ' + this.model.get('album') + ' to basket');
 
-			console.log('im here');
-		}
-	});
+		// remove event binding to prevent Zombie view
+		this.undelegateEvents();
+	},
 
-	// Finally, we kick every things off by creating the App.
-	var appView = new AppView;
+	render: function() {
+		$(this.el).html($.tmpl(this.template, this.model));
+		$(this.el).trigger('create');
+	}
 
 });
+
+// Order
+// -----
+
+// Order item collection that
+// will store selected product item
+var OrderItems = Backbone.Collection.extend({
+	// user Item model
+	model: Item,
+
+	// initialization
+	initialize: function () {
+		// bind customized method to this view
+		_.bindAll(this, "totalPrice");
+	},
+
+	// calculate total price
+	totalPrice: function () {
+		// underscore.js's **reduce** function is used
+		return this.reduce(function(memo, value) { return memo + value.get("price") }, 0);
+	}
+});
+
+// Representation of a single
+// selected product in the basket
+var OrderItemView = Backbone.View.extend({
+	// use HTML element **tr**
+	tagName: 'tr',
+
+	// HTML template for single ordered product item
+	template: $('#order-item-tmpl').template(),
+
+	// bind click event to customized method
+	events: {
+		"click .removeItem"   : "removeItem"
+	},
+
+	// initialization
+	initialize: function (options) {
+
+	},
+
+	// remove a selected product item
+	removeItem: function () {
+		// will destroy associated model from ordered product item collection
+		this.model.destroy();
+	},
+
+	// render this view
+	render: function() {
+
+		// render associated model using template and then append it to the
+		// parent's element
+		$(this.el).append($.tmpl(this.template, this.model));
+
+		return this;
+	}
+});
+
+
+// Container view for list of order item view
+// or we can call this simply shopping basket view
+var OrderItemViewList = Backbone.View.extend({
+	// define HTML element destination
+	el: $("#order-items"),
+
+	// this view has total price view
+	// totalView: null,
+
+	// initialization
+	initialize: function () {
+		// bind all customized functions to this view
+		_.bindAll(this, "render","removeItem","emptyBasket","renderItem");
+
+		// bind this collection events to customized functions
+		this.collection.bind("remove", this.removeItem);
+		this.collection.bind("reset", this.emptyBasket);
+	},
+
+	// empty basket view
+	emptyBasket: function() {
+		$(this.el).empty();
+	},
+
+	// when an item is removed from the basket
+	removeItem: function(item) {
+		console.log("remove item in the basket...");
+	},
+
+	// render a single product item based on
+	// associated model and append it to the
+	// main element
+	renderItem: function(model){
+		var orderItemView = new OrderItemView({model: model, parent: this});
+		orderItemView.render();
+		$(this.el).append(orderItemView.el);
+		$(this.el).trigger('create');
+	},
+
+	// render the view
+	render: function () {
+		$(this.el).empty();
+		console.log("render order items in the basket...");
+		this.collection.each(this.renderItem);
+	}
+
+
+});
+
+// Details View
+// -------------
+var DetailsView = Backbone.View.extend({
+
+	// element of details view
+	el: $('#details'),
+
+	appRouter: null,
+
+	initialize: function () {
+		this.appRouter = this.options.appRouter;
+	},
+
+	// render view
+	render: function () {
+		var _this = this;
+		console.log(this.model.get('value'));
+
+		// define new collection for product items
+		var items = new ItemCollection;
+
+		// get collection of product item from
+		// JSON data based on selected category
+		items.url =  "data/" + this.model.get('value') + "_data.json";
+
+		// fetch it synchronously
+		items.fetch({
+			async: false,
+			success: function() {
+				// now, let's create the View for the product items
+				// and render it
+				var itemViewList = new ItemViewList({collection: items, appRouter: _this.appRouter});
+				itemViewList.render();
+			},
+			error: function() {
+				console.log('Data is not available');
+			}
+		});
+
+	}
+});
+
+
+// Buttons
+// -------
+
+// Basket Button
+
+var BasketButton = Backbone.View.extend({
+	template:  $('#basket-btn-tmpl').template(),
+	appRouter: null,
+	initialize: function() {
+		this.appRouter = this.options.appRouter;
+	},
+	render : function () {
+
+		var totalPrice = this.appRouter.basketItems.totalPrice();
+
+		$('#' + this.el.id + ' #basket-btn').remove();  //cleanup
+		$(this.el).append($.tmpl(this.template, {price:totalPrice}));
+	}
+});
+
+
+// Submit Button
+
+var SubmitButton = Backbone.View.extend({
+	el: '.basket-footer',
+	template:  $('#submit-btn-tmpl').template(),
+	appRouter: null,
+	initialize: function() {
+		this.appRouter = this.options.appRouter;
+	},
+	render : function () {
+
+		var totalPrice = this.appRouter.basketItems.totalPrice();
+
+		$('#submit-btn').remove();  //cleanup
+		$(this.el).append($.tmpl(this.template, {price:totalPrice}));
+	}
+});
+
+// Reset Button
+
+var ResetButton = Backbone.View.extend({
+	el: '.basket-footer',
+	template:  $('#reset-btn-tmpl').template(),
+	appRouter: null,
+	events: {
+		"click #reset-btn": "resetBasket"
+	},
+	initialize: function() {
+		_.bindAll(this, "resetBasket");
+		this.appRouter = this.options.appRouter;
+	},
+	resetBasket: function() {
+		console.log('reset basket ...');
+		this.appRouter.basketItems.reset();
+	},
+	render : function () {
+		$('#reset-btn').remove();  //cleanup
+		$(this.el).append($.tmpl(this.template));
+	}
+});
+
+
+// Home View
+// -------------
+
+var HomeView = Backbone.View.extend({
+
+	// parent router
+	appRouter: null,
+
+	// product categories
+	cat_data: null,
+	cat_items: null,
+	cat_view: null,
+
+	initialize: function () {
+		// define this as local variable
+		// so it's accessible in the lower
+		// functions
+		var homeView = this;
+
+		this.appRouter = this.options.appRouter;
+
+		// retrieve product category list
+		// from JSON file
+		$.ajax({
+			url: "data/ProductCategories_data.json",
+			dataType: 'json',
+			data: {},
+			async: false,
+
+			// when product category list is successfully retrieved
+			success: function (data)
+			{
+				// build category list
+				homeView.cat_data = data;
+				homeView.cat_items = new CategoryCollection(data);
+
+				homeView.cat_view = new CategoryListView({ collection: homeView.cat_items, appRouter: homeView.appRouter });
+				homeView.cat_view.render();
+
+			}
+		});
+	}
+
+});
+
+
+
+
+var AppRouter = Backbone.Router.extend({
+
+	msg: "hahaha",
+
+	// home page
+	homeView: null,
+	basketBtn: null,
+
+	// details page
+	detailsModel: null,
+	detailsView: null,
+
+	// basket page
+	basketItems: null,
+	basketView: null,
+	submitBtn: null,
+	resetBtn: null,
+
+
+	routes:{
+		"":"home",
+		"details": "details",
+		"basket":"basket"
+	},
+
+	initialize: function () {
+		// Handle back button throughout the application
+		$('.back').live('click', function(event) {
+			window.history.back();
+			return false;
+		});
+
+		// initialize user's order
+		this.basketItems = new OrderItems;
+	},
+
+	home: function () {
+		console.log('#home');
+		if ($('#categories').children().length == 0) {
+			this.homeView = new HomeView({appRouter : this});
+		}
+		this.basketBtn = new BasketButton ({el:'#home-header', appRouter:this});
+		this.basketBtn.render();
+		$('#home').trigger('create');
+	},
+
+	details: function () {
+		console.log('#details');
+		this.detailsView = new DetailsView ({model: this.detailsModel, appRouter : this});
+		this.detailsView.render();
+		this.basketBtn = new BasketButton ({el:'#details-header', appRouter:this});
+		this.basketBtn.render();
+		$('#details').trigger('create');
+	},
+
+	basket: function () {
+		console.log(this.basketItems.toJSON());
+		this.basketView = new OrderItemViewList ({collection:this.basketItems});
+		this.basketView.render();
+		this.resetBtn = new ResetButton ({appRouter:this});
+		this.resetBtn.render();
+		this.submitBtn = new SubmitButton ({appRouter:this});
+		this.submitBtn.render();
+		$('#basket').trigger('create');
+	}
+
+});
+
+$(document).ready(function () {
+	console.log('document is ready');
+	app = new AppRouter();
+	Backbone.history.start();
+});
+
