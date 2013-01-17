@@ -1,10 +1,14 @@
+#movie-table {font-size: .8em}
 #movie-table td, #movie-table th {vertical-align: middle;}
 #movie-table .tbl-price {text-align: right;}
-#movie-table .tbl-price-total {text-align: right; font-weight: bold; color: #2779aa; font-size: 1.2em;}
+#movie-table .tbl-price-total {font-weight: bold; color: #2779aa; font-size: 1.2em;}
 #movie-table .tbl-price-total-row {background-color: #ccc;}
-.basket-footer {text-align: right}
 
-@media ( min-width: 40px ) {
+.basket-footer {text-align: right}
+.basket-item-img {display:inline-block; vertical-align:middle; border:1px #ccc solid; width: 30px; height: 30px;}
+.noProductTxt {text-align: center; padding: 20px; font-size: 1.2em; color: #5393c5;}
+
+@media ( min-width: 10em ) {
 	/* Show the table header rows and set all cells to display: table-cell */
 	.my-custom-breakpoint td,
 	.my-custom-breakpoint th,

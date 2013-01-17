@@ -27,10 +27,9 @@ var CategoryCollection = Backbone.Collection.extend({
 	}
 });
 
-
 // Single Category View
 var CategoryView = Backbone.View.extend({
-//	detailView: null,
+
 	tagName: 'li',
 
 	// HTML template for each category
@@ -41,6 +40,7 @@ var CategoryView = Backbone.View.extend({
 	// initialization
 	initialize: function () {
 
+		// set appRouter
 		this.appRouter = this.options.appRouter;
 
 		// bind customized method
@@ -52,17 +52,18 @@ var CategoryView = Backbone.View.extend({
 		// want to do further processing to this view
 		$(this.el).data("item-view", this.model);
 
-//		// init details view
-//		this.detailsView = new DetailsView;
 	},
+
+	// bind event when user click me
 	events: {
 		"click a": "setDetailsViewModel"
 	},
+
+	// set model for Details View
 	setDetailsViewModel: function () {
-		//this.detailsView.render(this.model);
-		console.log('set model..');
 		this.appRouter.detailsModel = this.model;
 	},
+
 	// render Category view
 	render: function() {
 		// render template with associated model
@@ -76,15 +77,15 @@ var CategoryListView = Backbone.View.extend({
 	// bind categories to <code>#categories</code>
 	// element in the HTML
 	el: '#categories',
+
 	// HTML template for each category
 	template: $('#prod-cat-tmpl').template(),
 
 	appRouter: null,
 
 	initialize: function() {
-
+		// set appRouter
 		this.appRouter = this.options.appRouter;
-
 		// bind customized method to this view
 		_.bindAll(this, "renderItem");
 	},
@@ -100,7 +101,6 @@ var CategoryListView = Backbone.View.extend({
 
 	// render Category view
 	render: function(){
-
 		// render each associated category model based on the template
 		// and then append it to the main element
 		this.collection.each(this.renderItem);
@@ -144,19 +144,22 @@ var ItemView = Backbone.View.extend({
 
 	// initialization
 	initialize: function () {
+		// set appRouter for this view
 		this.appRouter = this.options.appRouter;
+		// bind all customized functions
 		_.bindAll(this, "showItemPopup");
 	},
 
+	// bind events
 	events: {
 		"click #buyItemBtn": "showItemPopup"
 	},
 
+	// display popup
 	showItemPopup: function() {
-		console.log("show popup ...")
+		// create new popup instance based on associated model
 		var buyPopup = new ItemPopUpView({model: this.model, appRouter: this.appRouter});
 		buyPopup.render();
-
 	},
 
 	// render Item view
@@ -179,6 +182,7 @@ var ItemViewList = Backbone.View.extend({
 
 	// initialization
 	initialize: function(){
+		// set appRouter for this View
 		this.appRouter = this.options.appRouter;
 
 		// bind customized method to this view
@@ -194,19 +198,16 @@ var ItemViewList = Backbone.View.extend({
 	// associated model and append it to the
 	// main element
 	renderItem: function(model){
-
-
-			// initiate item view with its model
-			var itemView = new ItemView({model: model, appRouter: this.appRouter});
-			// render it
-			itemView.render();
-			// and append it to the main element
-			$(this.el).append(itemView.el);
+		// initiate item view with its model
+		var itemView = new ItemView({model: model, appRouter: this.appRouter});
+		// render it
+		itemView.render();
+		// and append it to the main element
+		$(this.el).append(itemView.el);
 	},
 
 	// render the collection of product items
 	render: function() {
-
 		// first check if container is empty or not
 		if (!this.isContainerEmpty()) {
 			//if yes then empty it
@@ -217,7 +218,6 @@ var ItemViewList = Backbone.View.extend({
 		this.collection.each(this.renderItem);
 		// refresh list view to re-apply jQuery Mobile styling
 		$(this.el).listview("refresh");
-
 	}
 });
 
@@ -226,9 +226,10 @@ var ItemViewList = Backbone.View.extend({
 // confirmation pop up if user wants to buy selected item or not
 var ItemPopUpView = Backbone.View.extend({
 
-	//element definition
+	// element definition
 	el: '#purchase',
 
+	// get template
 	template:  $('#prod-item-popup-tmpl').template(),
 
 	appRouter: null,
@@ -242,19 +243,21 @@ var ItemPopUpView = Backbone.View.extend({
 		"click .buy-item-btn": "buyItem"
 	},
 
+	// add selected item user wants to buy to basket collection
 	buyItem: function() {
 
-		// then insert its clone to the order collection
+		// insert selected item's clone to the basket collection
 		this.appRouter.basketItems.add(this.model.clone());
-
+		// log it
 		console.log('add ' + this.model.get('album') + ' to basket');
-
 		// remove event binding to prevent Zombie view
 		this.undelegateEvents();
 	},
 
+	// rendering View
 	render: function() {
 		$(this.el).html($.tmpl(this.template, this.model));
+		// re-create element to apply styling
 		$(this.el).trigger('create');
 	}
 
@@ -293,12 +296,12 @@ var OrderItemView = Backbone.View.extend({
 
 	// bind click event to customized method
 	events: {
-		"click .removeItem"   : "removeItem"
+		"click #remove-item-btn"   : "removeItem"
 	},
 
 	// initialization
 	initialize: function (options) {
-
+		_.bindAll(this, "removeItem");
 	},
 
 	// remove a selected product item
@@ -310,9 +313,16 @@ var OrderItemView = Backbone.View.extend({
 	// render this view
 	render: function() {
 
+		// generate element id
+		// based on **category**, **product_id**, and model's **cid**
+		var _id = 'order_item_' + this.model.get('category') + '_' + this.model.get('product_id') + '_' +  this.model.cid;
+
 		// render associated model using template and then append it to the
 		// parent's element
 		$(this.el).append($.tmpl(this.template, this.model));
+
+		// set element's id with the generated id
+		$(this.el).attr('id', _id);
 
 		return this;
 	}
@@ -325,44 +335,77 @@ var OrderItemViewList = Backbone.View.extend({
 	// define HTML element destination
 	el: $("#order-items"),
 
+	// totalPriceTemplate
+	totalPriceTmpl: $('#total-price-tmpl').template(),
+
+	appRouter: null,
+
 	// this view has total price view
 	// totalView: null,
 
 	// initialization
 	initialize: function () {
+
+		// set app router
+		this.appRouter = this.options.appRouter;
+
 		// bind all customized functions to this view
-		_.bindAll(this, "render","removeItem","emptyBasket","renderItem");
+		_.bindAll(this, "render","removeItem","emptyBasket","renderItem", "refreshTotalPrice");
 
 		// bind this collection events to customized functions
 		this.collection.bind("remove", this.removeItem);
 		this.collection.bind("reset", this.emptyBasket);
 	},
 
+	refreshTotalPrice: function() {
+		$('.tbl-price-total-row').remove();
+		// finally add Total Price
+		var _totalPrice = this.appRouter.basketItems.totalPrice()
+		// render total price template
+		var _totalHTML = $.tmpl(this.totalPriceTmpl, {totalPrice: _totalPrice});
+		$(this.el).append(_totalHTML);
+	},
+
 	// empty basket view
 	emptyBasket: function() {
+		// first empty all rows
 		$(this.el).empty();
+		// then refresh total price
+		this.refreshTotalPrice();
 	},
 
 	// when an item is removed from the basket
 	removeItem: function(item) {
-		console.log("remove item in the basket...");
+		// let's find out which one is going to be removed by generate element id
+		var _id = 'order_item_' + item.get('category') + '_' + item.get('product_id') + '_' + item.cid;
+
+		// remove element from the screen
+		$('#'+ _id).remove();
+
+		// then refresh total price
+		this.refreshTotalPrice();
 	},
 
 	// render a single product item based on
 	// associated model and append it to the
 	// main element
 	renderItem: function(model){
+		// create new instance of single order item view
 		var orderItemView = new OrderItemView({model: model, parent: this});
 		orderItemView.render();
+		// append it to this element
 		$(this.el).append(orderItemView.el);
+		// re-create element to reapply styling
 		$(this.el).trigger('create');
 	},
 
 	// render the view
 	render: function () {
+		// first empty the container
 		$(this.el).empty();
-		console.log("render order items in the basket...");
+		// for each selected items in the collection, lets render them
 		this.collection.each(this.renderItem);
+		this.refreshTotalPrice();
 	}
 
 
@@ -378,13 +421,13 @@ var DetailsView = Backbone.View.extend({
 	appRouter: null,
 
 	initialize: function () {
+		// set appRouter
 		this.appRouter = this.options.appRouter;
 	},
 
 	// render view
 	render: function () {
 		var _this = this;
-		console.log(this.model.get('value'));
 
 		// define new collection for product items
 		var items = new ItemCollection;
@@ -403,6 +446,13 @@ var DetailsView = Backbone.View.extend({
 				itemViewList.render();
 			},
 			error: function() {
+				// clean up
+				$("#productList").empty();
+				// display error text
+				$("#productList").append('<li><p class="noProductTxt">Products is not available</p></li>');
+				// reapply styling
+				$(this.el).listview("refresh");
+				// log
 				console.log('Data is not available');
 			}
 		});
@@ -415,60 +465,88 @@ var DetailsView = Backbone.View.extend({
 // -------
 
 // Basket Button
-
 var BasketButton = Backbone.View.extend({
+	// get template
 	template:  $('#basket-btn-tmpl').template(),
+
 	appRouter: null,
+
 	initialize: function() {
+		// set appRouter
 		this.appRouter = this.options.appRouter;
 	},
+
 	render : function () {
-
+		// get total price
 		var totalPrice = this.appRouter.basketItems.totalPrice();
-
-		$('#' + this.el.id + ' #basket-btn').remove();  //cleanup
+ 	    // clean up
+		$('#' + this.el.id + ' #basket-btn').remove();
+		// and finally render this view
 		$(this.el).append($.tmpl(this.template, {price:totalPrice}));
 	}
 });
 
 
 // Submit Button
-
 var SubmitButton = Backbone.View.extend({
 	el: '.basket-footer',
+
+	//get template
 	template:  $('#submit-btn-tmpl').template(),
+
 	appRouter: null,
+
 	initialize: function() {
+		// set appRouter
 		this.appRouter = this.options.appRouter;
 	},
+
 	render : function () {
 
-		var totalPrice = this.appRouter.basketItems.totalPrice();
+		var totalPrice = 0
 
-		$('#submit-btn').remove();  //cleanup
+		// get total price
+		if (this.appRouter.basketItems.length > 0) totalPrice = this.appRouter.basketItems.totalPrice();
+
+		// clean up
+		$('#submit-btn').remove();
+
+		// and finally render this view with total price
 		$(this.el).append($.tmpl(this.template, {price:totalPrice}));
 	}
 });
 
 // Reset Button
-
 var ResetButton = Backbone.View.extend({
 	el: '.basket-footer',
+
+	// get template
 	template:  $('#reset-btn-tmpl').template(),
+
 	appRouter: null,
+
+	// bind event
 	events: {
 		"click #reset-btn": "resetBasket"
 	},
+
 	initialize: function() {
 		_.bindAll(this, "resetBasket");
 		this.appRouter = this.options.appRouter;
 	},
+
 	resetBasket: function() {
 		console.log('reset basket ...');
+
+		// reset basket collection
 		this.appRouter.basketItems.reset();
+
+		// remove event binding to prevent Zombie view
+		this.undelegateEvents();
 	},
 	render : function () {
 		$('#reset-btn').remove();  //cleanup
+		// render this view
 		$(this.el).append($.tmpl(this.template));
 	}
 });
@@ -512,7 +590,6 @@ var HomeView = Backbone.View.extend({
 
 				homeView.cat_view = new CategoryListView({ collection: homeView.cat_items, appRouter: homeView.appRouter });
 				homeView.cat_view.render();
-
 			}
 		});
 	}
@@ -520,27 +597,26 @@ var HomeView = Backbone.View.extend({
 });
 
 
-
+// Main App Router
 
 var AppRouter = Backbone.Router.extend({
 
-	msg: "hahaha",
 
-	// home page
+	// home page elements
 	homeView: null,
 	basketBtn: null,
 
-	// details page
+	// details page elements
 	detailsModel: null,
 	detailsView: null,
 
-	// basket page
+	// basket page elements
 	basketItems: null,
 	basketView: null,
 	submitBtn: null,
 	resetBtn: null,
 
-
+	// define the routes
 	routes:{
 		"":"home",
 		"details": "details",
@@ -548,6 +624,9 @@ var AppRouter = Backbone.Router.extend({
 	},
 
 	initialize: function () {
+
+		_.bindAll(this, "createBasketButtons")
+
 		// Handle back button throughout the application
 		$('.back').live('click', function(event) {
 			window.history.back();
@@ -560,39 +639,65 @@ var AppRouter = Backbone.Router.extend({
 
 	home: function () {
 		console.log('#home');
+		// populate category view when homepage is empty
 		if ($('#categories').children().length == 0) {
 			this.homeView = new HomeView({appRouter : this});
 		}
+		// render basket button
 		this.basketBtn = new BasketButton ({el:'#home-header', appRouter:this});
 		this.basketBtn.render();
+
+		// trigger create to reapply styling
 		$('#home').trigger('create');
 	},
 
 	details: function () {
 		console.log('#details');
+		// render details view with associated details model
 		this.detailsView = new DetailsView ({model: this.detailsModel, appRouter : this});
 		this.detailsView.render();
+
+		// render basket button
 		this.basketBtn = new BasketButton ({el:'#details-header', appRouter:this});
 		this.basketBtn.render();
+
+		// trigger create to reapply styling
 		$('#details').trigger('create');
 	},
 
 	basket: function () {
 		console.log(this.basketItems.toJSON());
-		this.basketView = new OrderItemViewList ({collection:this.basketItems});
+		// render basket view with order item collection
+		this.basketView = new OrderItemViewList ({collection:this.basketItems, appRouter:this});
 		this.basketView.render();
+
+		// create basket buttons
+		this.createBasketButtons();
+
+		// trigger create to reapply styling
+		$('#basket').trigger('create');
+	},
+
+	createBasketButtons: function () {
+		// first .. clean up
+		$('.basket-footer').empty();
+
+		// render reset button
 		this.resetBtn = new ResetButton ({appRouter:this});
 		this.resetBtn.render();
+
+		// render submit button
 		this.submitBtn = new SubmitButton ({appRouter:this});
 		this.submitBtn.render();
-		$('#basket').trigger('create');
 	}
 
 });
 
 $(document).ready(function () {
-	console.log('document is ready');
+	console.info('document is ready');
+	// create instance
 	app = new AppRouter();
+	// start the history
 	Backbone.history.start();
 });
 
