@@ -3,8 +3,6 @@ ShoppingCartMobile
 
 Shopping Cart UI Demo using jQuery Mobile 1.3.0 Beta and BackboneJS.
 
-Complete libs being used as following:
-
 jQuery (jquery-1.8.3.min.js)
 - http://jquery.com/
 
