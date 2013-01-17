@@ -1,7 +1,7 @@
 ShoppingCartMobile
 ==================
 
-Shopping Cart UI Demo using jQuery Mobile and BackboneJS.
+Shopping Cart UI Demo using jQuery Mobile 1.3.0 Beta and BackboneJS.
 
 Complete libs being used as following:
 
@@ -19,5 +19,5 @@ underscore.js & backbone.js
 - http://github.com/documentcloud/underscore
 
 
-rnugraha@gmail.com
+rnugraha@gmail.com  
 www.spicevanjava.nl
